@@ -7,7 +7,7 @@
 stat_qq_point(data = NULL, mapping = NULL, geom = "point",
   position = "identity", na.rm = TRUE, show.legend = NA,
   inherit.aes = TRUE, distribution = "norm", dparams = list(),
-  quantiles = NULL, qtype = 7, qprobs = c(0.25, 0.75), detrend = FALSE,
+  detrend = FALSE, identity = FALSE, qtype = 7, qprobs = c(0.25, 0.75),
   ...)
 }
 \arguments{
@@ -53,28 +53,33 @@ to use. Do not provide the full distribution function name (e.g.,
 \code{"norm"}). If you wish to provide a custom distribution, you may do so
 by first creating the density, quantile, and random functions following the
 standard nomenclature from the \code{stats} package (i.e., for
-\code{"custom"}, create the \code{"dcustom"}, \code{"qcustom"}, and
-\code{"rcustom"} functions).}
+\code{"custom"}, create the \code{dcustom}, \code{pcustom},
+\code{qcustom}, and \code{rcustom} functions).}
 
 \item{dparams}{List of additional parameters passed on to the previously
-chosen \code{distribution} function.}
-
-\item{quantiles}{Numeric vector. Specify the quantiles to be used for the Q-Q
-plot. If \code{quantiles = NULL}, quantiles are automatically created using
-\code{\link[stats]{ppoints}}.}
-
-\item{qtype}{Integer between 1 and 9. Only used if \code{detrend = TRUE}.
-Type of the quantile algorithm to be used by the
-\code{\link[stats]{quantile}} function to construct the Q-Q line.}
-
-\item{qprobs}{Numeric vector of length two. Only used if \code{detrend =
-TRUE}. Represents the quantiles used by the \code{\link[stats]{quantile}}
-function to construct the Q-Q line.}
+chosen \code{distribution} function. If an empty list is provided (default)
+then the distributional parameters are estimated via MLE. MLE for custom
+distributions is currently not supported, so you must provide the
+appropriate \code{dparams} in that case.}
 
 \item{detrend}{Logical. Should the plot objects be detrended? If \code{TRUE},
 the objects will be detrended according to the reference Q-Q line. This
 procedure was described by Thode (2002), and may help reducing visual bias
 caused by the orthogonal distances from Q-Q points to the reference line.}
+
+\item{identity}{Logical. Only used if \code{detrend = TRUE}. Should an
+identity line be used as the reference line for the plot detrending? If
+\code{TRUE}, the points will be detrended according to the reference
+identity line. If \code{FALSE} (default), the commonly-used Q-Q line that
+intercepts two data quantiles specified in \code{qprobs} is used.}
+
+\item{qtype}{Integer between 1 and 9. Only used if \code{detrend = TRUE} and
+\code{identity =  FALSE}. Type of the quantile algorithm to be used by the
+\code{\link[stats]{quantile}} function to construct the Q-Q line.}
+
+\item{qprobs}{Numeric vector of length two. Only used if \code{detrend =
+TRUE} and \code{identity =  FALSE}. Represents the quantiles used by the
+\code{\link[stats]{quantile}} function to construct the Q-Q line.}
 
 \item{...}{other arguments passed on to \code{\link{layer}}. These are
 often aesthetics, used to set an aesthetic to a fixed value, like
