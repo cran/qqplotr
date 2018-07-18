@@ -23,9 +23,10 @@ gg
 
 ## ----fig.align = "center", fig.width = 7, fig.height = 5-----------------
 gg <- ggplot(data = smp, mapping = aes(sample = norm)) +
-	geom_qq_band(bandType = "ts", mapping = aes(fill = "TS")) +
-	geom_qq_band(bandType = "normal", mapping = aes(fill = "Normal")) +
-	geom_qq_band(bandType = "boot", mapping = aes(fill = "Bootstrap")) +
+	geom_qq_band(bandType = "ks", mapping = aes(fill = "KS"), alpha = 0.5) +
+	geom_qq_band(bandType = "ts", mapping = aes(fill = "TS"), alpha = 0.5) +
+	geom_qq_band(bandType = "pointwise", mapping = aes(fill = "Normal"), alpha = 0.5) +
+	geom_qq_band(bandType = "boot", mapping = aes(fill = "Bootstrap"), alpha = 0.5) +
 	stat_qq_line() +
 	stat_qq_point() +
 	labs(x = "Theoretical Quantiles", y = "Sample Quantiles") +
@@ -60,7 +61,7 @@ gg
 data("barley", package = "lattice")
 
 gg <- ggplot(data = barley, mapping = aes(sample = yield, color = site, fill = site)) +
-	stat_qq_band() +
+	stat_qq_band(alpha=0.5) +
 	stat_qq_line() +
 	stat_qq_point() +
 	facet_wrap(~ site) +

@@ -42,11 +42,12 @@
 #'   line.
 #' @param qprobs Numeric vector of length two. Represents the quantiles used by
 #'   the \code{\link[stats]{quantile}} function to construct the Q-Q line.
-#' @param bandType Character. Either \code{"normal"}, \code{"boot"} or
-#'   \code{"ts"}. \code{"normal"} constructs simultaneous confidence bands based
+#' @param bandType Character. Either \code{"pointwise"}, \code{"boot"}, \code{"ks"} or
+#'   \code{"ts"}. \code{"pointwise"} constructs pointwise confidence bands based
 #'   on Normal confidence intervals. \code{"boot"} creates pointwise confidence
 #'   bands based on a parametric bootstrap; parameters are estimated with MLEs.
-#'   Finally, \code{"ts"} constructs tail-sensitive confidence bands, as
+#'   \code{"ks"} constructs simultaneous confidence bands based on the Kolmogorov-Smirnov
+#'   test. Finally, \code{"ts"} constructs tail-sensitive confidence bands, as
 #'   described by Aldor-Noiman et al. (2013) (also, see 'Note' for
 #'   limitations).
 #' @param B Integer. If \code{bandType = "boot"}, then \code{B} is the number of
@@ -57,7 +58,7 @@
 #'   distributional parameter used to construct the simulated tail-sensitive
 #'   confidence bands. If either \code{mu} or \code{sigma} are \code{NULL}, then
 #'   those parameters are estimated using \code{\link[robustbase]{Qn}} and
-#'   \code{\link[robustbase]{s_Qn}}, respectively.
+#'   \code{\link[robustbase:Qn]{robustbase::s_Qn()}}, respectively.
 #' @param sigma Numerical. Only used if \code{bandType = "ts"}. Scale
 #'   distributional parameter used to construct the simulated tail-sensitive
 #'   confidence bands. If either \code{mu} or \code{sigma} are \code{NULL}, then
@@ -147,7 +148,7 @@ stat_qq_band <- function(data = NULL,
 												 identity = FALSE,
 												 qtype = 7,
 												 qprobs = c(.25, .75),
-												 bandType = "normal",
+												 bandType = "pointwise",
 												 B = 1000,
 												 conf = .95,
 												 mu = NULL,
@@ -191,6 +192,7 @@ stat_qq_band <- function(data = NULL,
 		stop("Please provide a positive value for B.",
 				 call. = FALSE)
 	}
+	bandType <- match.arg(bandType, c("pointwise", "boot", "ts", "ks"))
 
 	# vector with common discrete distributions
 	discreteDist <- c("binom", "geom", "nbinom", "pois")
@@ -213,7 +215,7 @@ stat_qq_band <- function(data = NULL,
 			identity = identity,
 			qtype = qtype,
 			qprobs = qprobs,
-			bandType = match.arg(bandType, c("normal", "boot", "ts")),
+			bandType = bandType,
 			B = round(B),
 			conf = conf,
 			mu = mu,
@@ -286,7 +288,7 @@ StatQqBand <- ggplot2::ggproto(
 						norm = "normal",
 						nbinom = "negative binomial",
 						pois = "poisson",
-						t = dt,
+						t = "t",
 						weibull = "weibull",
 						NULL
 					)
@@ -338,8 +340,8 @@ StatQqBand <- ggplot2::ggproto(
 
 			fittedValues <- (slope * theoretical) + intercept
 
-			# confidence bands based on normal confidence intervals
-			if (bandType == "normal") {
+			# pointwise confidence bands based on normal confidence intervals
+			if (bandType == "pointwise") {
 				probs <- ppoints(n)
 				stdErr <- (slope / do.call(dFunc, c(list(x = theoretical), dparams))) * sqrt(probs * (1 - probs) / n)
 				zCrit <- qnorm(p = (1 - (1 - conf) / 2))
@@ -358,6 +360,16 @@ StatQqBand <- ggplot2::ggproto(
 
 				upper <- apply(X = bs, MARGIN = 1, FUN = quantile, probs = (1 + conf) / 2)
 				lower <- apply(X = bs, MARGIN = 1, FUN = quantile, probs = (1 - conf) / 2)
+			}
+
+			# using the DKW inequality for simultaneous bands
+			if (bandType == "ks") {
+				probs <- ppoints(n)
+				epsilon <- sqrt((1 / (2 * n)) * log(2/(1-conf)))
+				lp <- pmax(probs - epsilon, rep(0, n))
+				up <- pmin(probs + epsilon, rep(1, n))
+				lower <- intercept + slope * do.call(qFunc, c(list(p = lp), dparams))
+				upper <- intercept + slope * do.call(qFunc, c(list(p = up), dparams))
 			}
 
 			# tail-sensitive confidence bands
