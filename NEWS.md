@@ -1,3 +1,10 @@
+# qqplotr 0.0.4
+
+* Changed order of arguments in `geom_*` and `stat_*` functions so that mapping is first, then data.
+
+* Fixed fill and color mismatch bug.
+
+
 # qqplotr 0.0.3
 
 * Added `bandType = "ks"`, which draws simultaneous confidence bands based on an inversion of the Kolmogorov-Smirnov test.

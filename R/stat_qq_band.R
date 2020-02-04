@@ -58,7 +58,7 @@
 #'   distributional parameter used to construct the simulated tail-sensitive
 #'   confidence bands. If either \code{mu} or \code{sigma} are \code{NULL}, then
 #'   those parameters are estimated using \code{\link[robustbase]{Qn}} and
-#'   \code{\link[robustbase:Qn]{robustbase::s_Qn()}}, respectively.
+#'   \code{\link[robustbase]{s_Qn}}, respectively.
 #' @param sigma Numerical. Only used if \code{bandType = "ts"}. Scale
 #'   distributional parameter used to construct the simulated tail-sensitive
 #'   confidence bands. If either \code{mu} or \code{sigma} are \code{NULL}, then
@@ -135,25 +135,27 @@
 #' gg
 #'
 #' @export
-stat_qq_band <- function(data = NULL,
-												 mapping = NULL,
-												 geom = "qq_band",
-												 position = "identity",
-												 show.legend = NA,
-												 inherit.aes = TRUE,
-												 na.rm = TRUE,
-												 distribution = "norm",
-												 dparams = list(),
-												 detrend = FALSE,
-												 identity = FALSE,
-												 qtype = 7,
-												 qprobs = c(.25, .75),
-												 bandType = "pointwise",
-												 B = 1000,
-												 conf = .95,
-												 mu = NULL,
-												 sigma = NULL,
-												 ...) {
+stat_qq_band <- function(
+	mapping = NULL,
+	data = NULL,
+	geom = "qq_band",
+	position = "identity",
+	na.rm = TRUE,
+	show.legend = NA,
+	inherit.aes = TRUE,
+	distribution = "norm",
+	dparams = list(),
+	detrend = FALSE,
+	identity = FALSE,
+	qtype = 7,
+	qprobs = c(.25, .75),
+	bandType = "pointwise",
+	B = 1000,
+	conf = .95,
+	mu = NULL,
+	sigma = NULL,
+	...
+) {
 	# error handling
 	if (!(distribution %in% c(
 		"beta",
