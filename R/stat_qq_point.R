@@ -39,7 +39,7 @@
 #'
 #' @references
 #' \itemize{
-#' \item{\href{https://www.crcpress.com/Testing-For-Normality/Thode/p/book/9780824796136}{Thode,
+#' \item{\href{https://www.routledge.com/Testing-For-Normality/Thode/p/book/9780824796136}{Thode,
 #' H. (2002), Testing for Normality. CRC Press, 1st Ed.}}
 #' }
 #'
@@ -156,15 +156,17 @@ StatQqPoint <- ggplot2::ggproto(
 
 	required_aes = c("sample"),
 
+	optional_aes = c("label"),
+
 	compute_group = function(data,
 													 self,
 													 scales,
-													 distribution,
-													 dparams,
-													 detrend,
-													 identity,
-													 qtype,
-													 qprobs) {
+													 distribution = "norm",
+													 dparams = list(),
+													 detrend = FALSE,
+													 identity = FALSE,
+													 qtype = 7,
+													 qprobs = c(.25)) {
 		# distributional function
 		qFunc <- eval(parse(text = paste0("q", distribution)))
 
@@ -248,6 +250,7 @@ StatQqPoint <- ggplot2::ggproto(
 			out <- data.frame(sample = smp, theoretical = theoretical)
 		}
 
+		if (!is.null(data$label)) out$label <- data$label[oidx]
 		out
 	}
 )
