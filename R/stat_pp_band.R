@@ -20,8 +20,9 @@
 #'   then the distributional parameters are estimated via MLE. MLE for custom
 #'   distributions is currently not supported, so you must provide the
 #'   appropriate \code{dparams} in that case.
-#' @param bandType Character. Only \code{"boot"} is available for now. \code{"boot"}
-#'   creates pointwise confidence bands based on a bootstrap.
+#' @param bandType Character. Only \code{"boot"} and \code{"ell"} are available for now. \code{"boot"}
+#'   creates pointwise confidence bands based on a bootstrap. \code{"ell"}
+#'   constructs simultaenous bands using the equal local levels test.
 #' @param B Integer. If \code{bandType = "boot"}, then \code{B} is the number of
 #'   bootstrap replicates.
 #' @param conf Numerical. Confidence level of the bands.
@@ -30,6 +31,17 @@
 #'   This procedure was described by Thode (2002), and may help reducing visual
 #'   bias caused by the orthogonal distances from P-P points to the reference
 #'   line.
+#'
+#' @references
+#' \itemize{
+#' \item{Thode, H. (2002), Testing for Normality. CRC Press, 1st Ed.}
+#' \item{\href{https://www.tandfonline.com/doi/abs/10.1080/00031305.2013.847865}{Aldor-Noiman,
+#' S. et al. (2013). The Power to See: A New Graphical Test of Normality. The
+#' American Statistician. 67:4.}}
+#' \item{\href{https://arxiv.org/abs/2111.15082}{Weine, E. et al. (2021).
+#' Application of Equal Local Levels to Improve Q-Q Plot Testing Bands with R
+#' Package qqconf.}}
+#' }
 #'
 #' @examples
 #' # generate random Normal data
@@ -47,7 +59,7 @@
 #' # Shifted Normal P-P plot of Normal data
 #' dp <- list(mean = 1.5)
 #' gg <- ggplot(data = smp, mapping = aes(sample = norm)) +
-#'  stat_pp_band(dparams = dp) +
+#'  stat_pp_band(dparams = dp, bandType = "ell") +
 #'  stat_pp_line() +
 #'  stat_pp_point(dparams = dp) +
 #'  labs(x = "Probability Points", y = "Cumulative Probability")
@@ -56,12 +68,13 @@
 #' # Exponential P-P plot of Exponential data
 #' di <- "exp"
 #' gg <- ggplot(data = smp, mapping = aes(sample = exp)) +
-#'  stat_pp_band(distribution = di) +
+#'  stat_pp_band(distribution = di, bandType = "ell") +
 #'  stat_pp_line() +
 #'  stat_pp_point(distribution = di) +
 #'  labs(x = "Probability Points", y = "Cumulative Probability")
 #' gg
 #'
+#' \dontrun{
 #' # Normal P-P plot of mean ozone levels (airquality dataset)
 #' dp <- list(mean = 38, sd = 27)
 #' gg <- ggplot(data = airquality, mapping = aes(sample = Ozone)) +
@@ -70,6 +83,7 @@
 #' 	stat_pp_point(dparams = dp) +
 #'  labs(x = "Probability Points", y = "Cumulative Probability")
 #' gg
+#' }
 #'
 #' @export
 stat_pp_band <- function(
@@ -138,7 +152,7 @@ stat_pp_band <- function(
 			na.rm = na.rm,
 			distribution = distribution,
 			dparams = dparams,
-			bandType = match.arg(bandType, c("boot")),
+			bandType = match.arg(bandType, c("boot", "ell")),
 			B = round(B),
 			conf = conf,
 			discrete = distribution %in% discreteDist,
@@ -165,6 +179,8 @@ StatPpBand <- ggplot2::ggproto(
 
 	required_aes = c("sample"),
 
+	dropped_aes = c("sample"),
+
 	compute_group = {
 		function(data,
 						 self,
@@ -179,6 +195,7 @@ StatPpBand <- ggplot2::ggproto(
 			# distributional functions
 			pFunc <- eval(parse(text = paste0("p", distribution)))
 			rFunc <- eval(parse(text = paste0("r", distribution)))
+			qFunc <- eval(parse(text = paste0("q", distribution)))
 
 			smp <- data$sample
 			n <- length(smp)
@@ -244,6 +261,22 @@ StatPpBand <- ggplot2::ggproto(
 
 				upper <- apply(X = sim, MARGIN = 1, FUN = quantile, prob = (1 + conf) / 2)
 				lower <- apply(X = sim, MARGIN = 1, FUN = quantile, prob = (1 - conf) / 2)
+			}
+
+			if (bandType == "ell") {
+
+				band <- qqconf::get_qq_band(
+					n = n,
+					alpha = 1 - conf,
+					distribution = qFunc,
+					dparams = dparams,
+					prob_pts_method = "normal"
+				)
+
+				probs <- do.call(pFunc, c(list(q=band$expected_value), dparams))
+				lower <- do.call(pFunc, c(list(q=band$lower_bound), dparams))
+				upper <- do.call(pFunc, c(list(q=band$upper_bound), dparams))
+
 			}
 
 			out <- data.frame(

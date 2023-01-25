@@ -18,14 +18,15 @@ stat_qq_point(
   identity = FALSE,
   qtype = 7,
   qprobs = c(0.25, 0.75),
+  down.sample = NULL,
   ...
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{aes()}} or
-\code{\link[ggplot2:aes_]{aes_()}}. If specified and \code{inherit.aes = TRUE} (the
-default), it is combined with the default mapping at the top level of the
-plot. You must supply \code{mapping} if there is no plot mapping.}
+\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{aes()}}. If specified and
+\code{inherit.aes = TRUE} (the default), it is combined with the default mapping
+at the top level of the plot. You must supply \code{mapping} if there is no plot
+mapping.}
 
 \item{data}{The data to be displayed in this layer. There are three
 options:
@@ -42,10 +43,14 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
-\item{geom}{The geometric object to use display the data}
+\item{geom}{The geometric object to use to display the data, either as a
+\code{ggproto} \code{Geom} subclass or as a string naming the geom stripped of the
+\code{geom_} prefix (e.g. \code{"point"} rather than \code{"geom_point"})}
 
-\item{position}{Position adjustment, either as a string, or the result of
-a call to a position adjustment function.}
+\item{position}{Position adjustment, either as a string naming the adjustment
+(e.g. \code{"jitter"} to use \code{position_jitter}), or the result of a call to a
+position adjustment function. Use the latter if you need to change the
+settings of the adjustment.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -95,6 +100,10 @@ intercepts two data quantiles specified in \code{qprobs} is used.}
 TRUE} and \code{identity =  FALSE}. Represents the quantiles used by the
 \code{\link[stats]{quantile}} function to construct the Q-Q line.}
 
+\item{down.sample}{Integer specifying how many points you want to sample
+in a reduced sample (i.e., a down sample). The default value is \code{NULL}
+indicating no downsampling.}
+
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
 often aesthetics, used to set an aesthetic to a fixed value, like
 \code{colour = "red"} or \code{size = 3}. They may also be parameters
@@ -125,7 +134,6 @@ gg
 }
 \references{
 \itemize{
-\item{\href{https://www.routledge.com/Testing-For-Normality/Thode/p/book/9780824796136}{Thode,
-H. (2002), Testing for Normality. CRC Press, 1st Ed.}}
+\item{Thode, H. (2002), Testing for Normality. CRC Press, 1st Ed.}
 }
 }
